@@ -49,3 +49,8 @@
 
 * files in git-hub repo under folder D
 
+# Note:
+
+
+
+* If I also store my kubeconfig file in the repository, I will keep the cluster running until tomorrow
