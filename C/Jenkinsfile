@@ -58,7 +58,9 @@ pipeline {
                     finalImage = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
 
                         sh '''
-                           sh "sed -i 's/image:.*/image: $finalImage/g' B/k8s/statefullset.yaml"
+                            sed -i 's/image:.*/image: $finalImage/g' B/k8s/statefullset.yaml
+
+                            kubectl apply -f  B/k8s/statefullset.yaml
                         '''
                     }
                  }
