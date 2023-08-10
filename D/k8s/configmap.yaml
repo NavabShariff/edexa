@@ -3,21 +3,34 @@ kind: ConfigMap
 metadata:
   name: nginx-config
 data:
-  conf.d: |
-    server {
-        listen 80;
-        server_name stateless.shariff.live;
+  default.conf: |
 
-        location / {
-            proxy_pass http://stateless-service;
-        }
+    upstream stateless {
+      server stateless-service:80;
     }
 
     server {
-        listen 80;
-        server_name stateful.shariff.live;
 
-        location / {
-            proxy_pass http://statefulset-service;
-        }
+       listen 80;
+
+       server_name stateless.shariff.live;
+
+       location / {
+        proxy_pass http://stateless;
+       }
+    }
+
+    upstream stateful {
+      server statefulset-service:80;
+    }
+
+    server {
+
+       listen 80;
+
+       server_name stateful.shariff.live;
+
+       location / {
+        proxy_pass http://stateful;
+       }
     }
