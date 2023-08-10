@@ -74,7 +74,7 @@ pipeline {
                     withKubeConfig([credentialsId: 'my_kubeconfig']) {
 
 
-                        sh    "sed -i 's/image:.*/image:  ${DOCKERHUB_URL}/${DOCKERHUB_REPO}:${IMAGE_TAG}/g' B/k8s/statefullset.yaml"
+                        sh    "sed -i 's;image:.*;image: ${DOCKERHUB_URL}/${DOCKERHUB_REPO}:${IMAGE_TAG};g' B/k8s/statefullset.yaml"
 
                         sh    "kubectl apply -f  B/k8s/statefullset.yaml"
 

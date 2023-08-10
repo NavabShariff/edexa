@@ -17,7 +17,7 @@ spec:
       - name: dockerhub-statefulset
       containers:
       - name: statefulset
-        image:  navabnaeem/edex:statefulset
+        image:  navabnaeem/edex:1
         ports:
         - containerPort: 3000
 ---
