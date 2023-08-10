@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  conf.d: |
+    server {
+        listen 80;
+        server_name stateless.shariff.live;
+
+        location / {
+            proxy_pass http://stateless-service;
+        }
+    }
+
+    server {
+        listen 80;
+        server_name stateful.shariff.live;
+
+        location / {
+            proxy_pass http://statefulset-service;
+        }
+    }

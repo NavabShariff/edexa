@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-app
+spec:
+  serviceName: "statefulset-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statefulset
+  template:
+    metadata:
+      labels:
+        app: statefulset
+    spec:
+      imagePullSecrets:
+      - name: dockerhub-statefulset
+      containers:
+      - name: statefulset
+        image: navabnaeem/edexa:statefulset
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statefulset-service
+spec:
+  selector:
+    app: statefulset
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJkb2NrZXIuaW8iOnsidXNlcm5hbWUiOiJuYXZhYm5hZWVtIiwicGFzc3dvcmQiOiJOYXZhYkAxMDExIiwiYXV0aCI6ImJtRjJZV0p1WVdWbGJUcE9ZWFpoWWtBeE1ERXgifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: dockerhub-statefulset
+type: kubernetes.io/dockerconfigjson
+

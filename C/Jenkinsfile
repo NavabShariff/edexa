@@ -1,0 +1,69 @@
+pipeline {
+
+   parameters {
+
+
+    string(name: 'DOCKERHUB_URL', defaultValue: 'navabnaeem', description: 'Please Enter your Docker docker REGISTRY URL')
+    string(name: 'DOCKERHUB_REPO', defaultValue: 'edexa', description: 'Please Enter your Docker App Repo Name?')
+    string(name: 'IMAGE_TAG', defaultValue: 'statefulset', description: 'Please Enter your image tag')
+
+   }
+   agent { label 'edexa' }
+
+   stages {
+
+        stage('clone') {
+            steps {
+               sh 'rm -rf *'
+               git branch: 'main', url: 'https://github.com/NavabShariff/edexa.git'
+
+            }
+        }
+        stage('pre-check') {
+            when {
+              anyOf {
+              changeset "B/**"
+              }
+            }
+            steps{
+              script {
+                 env.BUILDME = "yes"
+              }
+            }
+        }
+        stage('build-dockerimage') {
+
+            when {environment name: 'BUILDME', value: 'yes'}
+            steps{
+                script {
+
+                finalImage = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
+
+                    withDockerRegistry([credentialsId: "dockerhub-edexa", url: ""]) {
+                    sh '''
+                         docker build -t $finalImage .
+                         docker push $finalImage
+
+                    '''
+                    }
+                }
+            }
+        }
+        stage('Deployment') {
+            steps {
+
+                 script {
+                    withKubeConfig([credentialsId: 'my_kubeconfig']) {
+
+                    finalImage = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
+
+                        sh '''
+                           sh "sed -i 's/image:.*/image: $finalImage/g' B/k8s/statefullset.yaml"
+                        '''
+                    }
+                 }
+                }
+            }
+
+    } // stages
+}
