@@ -1,5 +1,7 @@
 pipeline {
 
+   agent any
+
    parameters {
 
 
@@ -8,7 +10,6 @@ pipeline {
     string(name: 'IMAGE_TAG', defaultValue: 'statefulset', description: 'Please Enter your image tag')
 
    }
-   agent { label 'edexa' }
 
    stages {
 
@@ -31,20 +32,31 @@ pipeline {
               }
             }
         }
-        stage('build-dockerimage') {
+
+        stage('Build and Push Docker Image') {
 
             when {environment name: 'BUILDME', value: 'yes'}
-            steps{
+
+
+            steps {
                 script {
 
-                finalImage = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
+                    dockerTag = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
 
-                    withDockerRegistry([credentialsId: "dockerhub-edexa", url: ""]) {
-                    sh '''
-                         docker build -t $finalImage .
-                         docker push $finalImage
+                    dir ("./B/node-hello") {
 
-                    '''
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-edexa') {
+
+
+                        sh   "docker build -t test:1 ."
+
+                        sh   "docker tag test:1 ${dockerTag}"
+
+                        sh   "docker push ${dockerTag}"
+
+
+
+                        }
                     }
                 }
             }
@@ -52,20 +64,25 @@ pipeline {
         stage('Deployment') {
             steps {
 
-                 script {
+            script {
+               when {environment name: 'BUILDME', value: 'yes'}
+
+                Image = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
+
+                dir("./B/k8s") {
+
                     withKubeConfig([credentialsId: 'my_kubeconfig']) {
 
-                    finalImage = params.DOCKERHUB_URL + "/" + params.DOCKERHUB_REPO + ":" + params.IMAGE_TAG
 
-                        sh '''
-                            sed -i 's/image:.*/image: $finalImage/g' B/k8s/statefullset.yaml
+                        sh    "sed -i 's/image:.*/image:  ${DOCKERHUB_URL}/${DOCKERHUB_REPO}:${IMAGE_TAG}/g' B/k8s/statefullset.yaml"
 
-                            kubectl apply -f  B/k8s/statefullset.yaml
-                        '''
+                        sh    "kubectl apply -f  B/k8s/statefullset.yaml"
+
                     }
                  }
-                }
             }
+            }
+        }
 
     } // stages
 }
